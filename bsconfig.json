@@ -1,0 +1,32 @@
+{
+  "name": "recommend",
+  "bsc-flags": [
+    "-bs-no-version-header",
+    "-bs-super-errors"
+  ],
+  "reason": {
+    "react-jsx": 2
+  },
+  "bs-dependencies": [
+    "bs-abstract",
+    "bs-nonempty",
+    "reason-react",
+    "reason-future"
+  ],
+  "bs-dev-dependencies": [],
+  "sources": [
+    {
+      "dir": "./src",
+      "subdirs": true
+    }
+  ],
+  "package-specs": {
+    "module": "commonjs",
+    "in-source": true
+  },
+  "refmt": 3,
+  "suffix": ".bs.js",
+  "warnings": {
+    "error": "+8+11"
+  }
+}

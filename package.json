@@ -1,0 +1,35 @@
+{
+  "name": "recommend",
+  "version": "0.1.0",
+  "description": "Type-safe autocomplete suggestions for reason-react",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mlms13/recommend.git"
+  },
+  "keywords": [
+    "typeahead",
+    "autocomplete",
+    "suggestions",
+    "reason-react",
+    "react"
+  ],
+  "author": "mlms13",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/mlms13/recommend/issues"
+  },
+  "homepage": "https://github.com/mlms13/recommend#readme",
+  "dependencies": {
+    "bs-abstract": "^0.16.0",
+    "bs-nonempty": "^1.2.1",
+    "reason-future": "^2.3.1",
+    "reason-react": "^0.5.3"
+  },
+  "devDependencies": {
+    "bs-platform": "^4.0.5"
+  }
+}
