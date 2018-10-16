@@ -5,9 +5,18 @@ type state('err, 'a) = State.t('err, 'a);
 type action('err, 'a) = Action.t('err, 'a);
 
 let createMake = () => {
+  module RecommendMenu = {
+    let make = RecommendMenu.createMake();
+  };
   let component = ReasonReact.reducerComponent(__MODULE__);
 
-  let make = (~fetchSuggestions, ~minCharCount=0, _children) => {
+  let make =
+      (
+        ~fetchSuggestions,
+        ~renderSuggestion,
+        ~minCharCount=0,
+        _children: array(string),
+      ) => {
     ...component,
     initialState: () => State.initial,
     reducer: (action: Action.t('x, 'sugg), state: State.t('x, 'sugg)) => {
@@ -19,14 +28,14 @@ let createMake = () => {
 
       switch (action, state.menuState) {
       /* Update filter and set menu to "insufficient" */
-      | (SetFilter(filter), _) when insufficientFilter =>
+      | (SetFilter(filter), _) when Js.String.length(filter) < minCharCount =>
         Update({filter, menuState: Closed(InsufficientFilter)})
 
       /* Update filter and open the menu */
       | (SetFilter(filter), _) =>
         UpdateWithSideEffects(
           {filter, menuState: Open(Loading, None)},
-          ({send, state}) => loadSuggestions(None, state.filter, send)
+          (({send}) => loadSuggestions(None, filter, send)),
         )
 
       /* When told to open a closed menu, but the filter doesn't have enough
@@ -56,15 +65,31 @@ let createMake = () => {
 
       /* When suggestions complete loading, but are empty, keep the menu open,
          but in a "no results" state */
-      | (SetSuggestions([], _), Open(_)) => Update(
-        {...state, menuState: Open(NoResults, None)}
-      )
+      | (SetSuggestions([], _), Open(_)) =>
+        Update({...state, menuState: Open(NoResults, None)})
+
+      /* TODO: deal with matching highlight later */
+      | (SetSuggestions([head, ...tail], _), Open(_)) =>
+        Update({
+          ...state,
+          menuState: Open(Loaded(NonEmptyList.make(head, tail)), None),
+        })
 
       | _ => NoUpdate
       };
     },
-    render: _self => <div />,
+    render: ({send, state}) =>
+      <div>
+        <input
+          value=state.State.filter
+          onChange=(
+            evt =>
+              send(Action.SetFilter(ReactEvent.Form.target(evt)##value))
+          )
+        />
+        <RecommendMenu menuState=state.State.menuState renderSuggestion />
+      </div>,
   };
 
-  (make);
+  make;
 };

@@ -4,6 +4,11 @@
   "description": "Type-safe autocomplete suggestions for reason-react",
   "main": "index.js",
   "scripts": {
+    "build": "bsb -make-world",
+    "start": "bsb -make-world -w",
+    "clean": "bsb -clean-world",
+    "webpack": "webpack -w",
+    "webpack:production": "NODE_ENV=production webpack",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
@@ -25,9 +30,11 @@
   "homepage": "https://github.com/mlms13/recommend#readme",
   "dependencies": {
     "bs-abstract": "^0.16.0",
-    "bs-nonempty": "^1.2.1",
+    "bs-nonempty": "^1.2.2",
     "reason-future": "^2.3.1",
-    "reason-react": "^0.5.3"
+    "reason-react": "^0.5.3",
+    "webpack": "4.19",
+    "webpack-cli": "^2.0"
   },
   "devDependencies": {
     "bs-platform": "^4.0.5"
