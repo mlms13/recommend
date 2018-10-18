@@ -11,9 +11,15 @@
     "bs-abstract",
     "bs-nonempty",
     "reason-react",
-    "reason-future"
+    "reason-future",
+
+    // dev, belong in "examples" bsconfig
+    "bs-fetch",
+    "re-yaml",
+    "bs-decode"
   ],
-  "bs-dev-dependencies": [],
+  "bs-dev-dependencies": [
+  ],
   "sources": [
     {
       "dir": "./src",
