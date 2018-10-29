@@ -3,8 +3,8 @@ module A = Recommend_Action;
 
 let evtValue = evt => ReactEvent.Form.target(evt)##value;
 
-type state('err, 'a) = S.t('err, 'a);
-type action('err, 'a) = A.t('err, 'a);
+type state('err, 'sugg) = S.t('err, 'sugg);
+type action('err, 'sugg) = A.t('err, 'sugg);
 
 let createMake = () => {
   module RecommendMenu = {
@@ -28,6 +28,20 @@ let createMake = () => {
         fetchSuggestions(filter)
         ->(Future.map(res => A.suggestionsFromResult(h, res) |> send))
         ->ignore;
+
+      let rev = l => NonEmptyList.reverse(l);
+      let last = l => rev(l) |> NonEmptyList.head;
+      let first = l => NonEmptyList.head(l);
+      let rec selectNext = (lst, v) =>
+        switch (lst) {
+        | []
+        | [_] => v
+        | [x, y, ...rest] =>
+          eqSuggestion(x, v) ? y : selectNext([y, ...rest], v)
+        };
+
+      let prev = (l, v) => selectNext(NonEmptyList.toT(rev(l)), v);
+      let next = (l, v) => selectNext(NonEmptyList.toT(l), v);
 
       switch (action, state.menuState) {
       /* Update filter and set menu to "insufficient" */
@@ -97,6 +111,25 @@ let createMake = () => {
       | (ChangeHighlight(Exact(sugg)), Open(Loaded(results), _)) =>
         Update({...state, menuState: Open(Loaded(results), Some(sugg))})
 
+      | (ChangeHighlight(MoveUp), Open(Loaded(r), None)) =>
+        Update({...state, menuState: Open(Loaded(r), Some(last(r)))})
+      | (ChangeHighlight(MoveUp), Open(Loaded(r), Some(v)))
+          when eqSuggestion(v, first(r)) =>
+        Update({...state, menuState: Open(Loaded(r), Some(last(r)))})
+
+      | (ChangeHighlight(MoveUp), Open(Loaded(r), Some(v))) =>
+        Update({...state, menuState: Open(Loaded(r), Some(prev(r, v)))})
+
+      | (ChangeHighlight(MoveDown), Open(Loaded(r), None)) =>
+        Update({...state, menuState: Open(Loaded(r), Some(first(r)))})
+
+      | (ChangeHighlight(MoveDown), Open(Loaded(r), Some(v)))
+          when eqSuggestion(v, last(r)) =>
+        Update({...state, menuState: Open(Loaded(r), Some(first(r)))})
+
+      | (ChangeHighlight(MoveDown), Open(Loaded(r), Some(v))) =>
+        Update({...state, menuState: Open(Loaded(r), Some(next(r, v)))})
+
       | _ => NoUpdate
       };
     },
@@ -104,7 +137,21 @@ let createMake = () => {
       <div>
         <input
           value={state.S.filter}
-          onChange={evt => send(A.SetFilter(evtValue(evt)))}
+          onChange={e => send(A.SetFilter(evtValue(e)))}
+          onKeyDown={
+            e => {
+              let key = ReactEvent.Keyboard.key(e);
+              let prevDefault = ReactEvent.Keyboard.preventDefault;
+
+              if (key == "ArrowUp") {
+                prevDefault(e);
+                send(A.ChangeHighlight(MoveUp));
+              } else if (key == "ArrowDown") {
+                prevDefault(e);
+                send(ChangeHighlight(MoveDown));
+              };
+            }
+          }
         />
         <RecommendMenu
           menuState={state.S.menuState}
