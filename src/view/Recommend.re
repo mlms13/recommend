@@ -1,8 +1,10 @@
-module State = Recommend_State;
-module Action = Recommend_Action;
+module S = Recommend_State;
+module A = Recommend_Action;
 
-type state('err, 'a) = State.t('err, 'a);
-type action('err, 'a) = Action.t('err, 'a);
+let evtValue = evt => ReactEvent.Form.target(evt)##value;
+
+type state('err, 'a) = S.t('err, 'a);
+type action('err, 'a) = A.t('err, 'a);
 
 let createMake = () => {
   module RecommendMenu = {
@@ -14,17 +16,18 @@ let createMake = () => {
       (
         ~fetchSuggestions,
         ~renderSuggestion,
+        ~eqSuggestion,
         ~minCharCount=0,
         _children: array(string),
       ) => {
     ...component,
-    initialState: () => State.initial,
-    reducer: (action: Action.t('x, 'sugg), state: State.t('x, 'sugg)) => {
+    initialState: () => S.initial,
+    reducer: (action: A.t('x, 'sugg), state: S.t('x, 'sugg)) => {
       let insufficientFilter = Js.String.length(state.filter) < minCharCount;
       let loadSuggestions = (h, filter, send) =>
         fetchSuggestions(filter)
-        |. Future.map(res => Action.suggestionsFromResult(h, res) |> send)
-        |. ignore;
+        ->(Future.map(res => A.suggestionsFromResult(h, res) |> send))
+        ->ignore;
 
       switch (action, state.menuState) {
       /* Update filter and set menu to "insufficient" */
@@ -59,9 +62,10 @@ let createMake = () => {
       /* When told to close the menu, just do it */
       | (CloseMenu, _) => Update({...state, menuState: Closed(Inactive)})
 
-      /* If we've loaded suggestions but the menu is now closed for any reason,
-         ignore that request and leave the menu closed */
-      | (SetSuggestions(_), Closed(_)) => NoUpdate
+      /* If we've loaded suggestions (or suggestions failed) but the menu is now
+         closed for any reason, ignore that request and leave the menu closed */
+      | (SetSuggestions(_), Closed(_))
+      | (FailSuggestions(_), Closed(_)) => NoUpdate
 
       /* When suggestions complete loading, but are empty, keep the menu open,
          but in a "no results" state */
@@ -75,19 +79,35 @@ let createMake = () => {
           menuState: Open(Loaded(NonEmptyList.make(head, tail)), None),
         })
 
+      /* When suggestions fail and the menu is still open, show the failed state
+         and clear any highlight */
+      | (FailSuggestions(err), Open(_)) =>
+        Update({...state, menuState: Open(Failed(err), None)})
+
+      /* If the menu is closed, loading, or has no results, and we receive an
+         action telling us to change the lighlight, ignore it */
+      | (ChangeHighlight(_), Closed(_))
+      | (ChangeHighlight(_), Open(Loading, _))
+      | (ChangeHighlight(_), Open(Failed(_), _))
+      | (ChangeHighlight(_), Open(NoResults, _)) => NoUpdate
+
+      | (ChangeHighlight(ClearHighlight), Open(Loaded(results), _)) =>
+        Update({...state, menuState: Open(Loaded(results), None)})
+
       | _ => NoUpdate
       };
     },
     render: ({send, state}) =>
       <div>
         <input
-          value=state.State.filter
-          onChange=(
-            evt =>
-              send(Action.SetFilter(ReactEvent.Form.target(evt)##value))
-          )
+          value={state.S.filter}
+          onChange={evt => send(A.SetFilter(evtValue(evt)))}
         />
-        <RecommendMenu menuState=state.State.menuState renderSuggestion />
+        <RecommendMenu
+          menuState={state.S.menuState}
+          renderSuggestion={renderSuggestion(state.S.filter)}
+          eqSuggestion
+        />
       </div>,
   };
 

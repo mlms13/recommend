@@ -5,6 +5,7 @@ let createMake = () => {
       (
         ~menuState: Recommend_State.MenuState.t('err, 'sugg),
         ~renderSuggestion: 'sugg => ReasonReact.reactElement,
+        ~eqSuggestion,
         _children,
       ) => {
     ...component,
@@ -12,15 +13,25 @@ let createMake = () => {
       switch (menuState) {
       | Closed(Inactive) => ReasonReact.null
       | Closed(InsufficientFilter) =>
-        <div> (ReasonReact.string("Type more characters")) </div>
-      | Open(Loading, _) => <div> (ReasonReact.string("Loading")) </div>
-      | Open(Failed(_), _) => <div> (ReasonReact.string("Failed")) </div>
-      | Open(NoResults, _) => <div> (ReasonReact.string("No results")) </div>
-      | Open(Loaded(suggestions), highlight) =>
+        <div> {ReasonReact.string("Type more characters")} </div>
+
+      | Open(Loading, _) => <div> {ReasonReact.string("Loading")} </div>
+      | Open(Failed(_), _) => <div> {ReasonReact.string("Failed")} </div>
+      | Open(NoResults, _) => <div> {ReasonReact.string("No results")} </div>
+      | Open(Loaded(suggs), highlight) =>
+        let eqHighlight = sugg =>
+          Belt.Option.mapWithDefault(highlight, false, eqSuggestion(sugg));
+
         let suggs =
-          NonEmptyList.toT(suggestions)
+          NonEmptyList.toT(suggs)
           |> Array.of_list
-          |> Array.map(renderSuggestion);
+          |> Array.map(v => {
+               let className =
+                 "reccommend-suggestion-item"
+                 ++ (eqHighlight(v) ? " is-highlighted" : "");
+               <li className> {renderSuggestion(v)} </li>;
+             });
+
         <ul> ...suggs </ul>;
       },
   };
