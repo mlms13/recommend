@@ -94,6 +94,9 @@ let createMake = () => {
       | (ChangeHighlight(ClearHighlight), Open(Loaded(results), _)) =>
         Update({...state, menuState: Open(Loaded(results), None)})
 
+      | (ChangeHighlight(Exact(sugg)), Open(Loaded(results), _)) =>
+        Update({...state, menuState: Open(Loaded(results), Some(sugg))})
+
       | _ => NoUpdate
       };
     },
@@ -106,6 +109,8 @@ let createMake = () => {
         <RecommendMenu
           menuState={state.S.menuState}
           renderSuggestion={renderSuggestion(state.S.filter)}
+          onHoverSuggestion={sugg => send(ChangeHighlight(Exact(sugg)))}
+          onClearSuggestions={() => send(ChangeHighlight(ClearHighlight))}
           eqSuggestion
         />
       </div>,

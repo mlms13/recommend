@@ -6,6 +6,8 @@ let createMake = () => {
         ~menuState: Recommend_State.MenuState.t('err, 'sugg),
         ~renderSuggestion: 'sugg => ReasonReact.reactElement,
         ~eqSuggestion,
+        ~onHoverSuggestion: 'sugg => unit,
+        ~onClearSuggestions: unit => unit,
         _children,
       ) => {
     ...component,
@@ -29,7 +31,12 @@ let createMake = () => {
                let className =
                  "reccommend-suggestion-item"
                  ++ (eqHighlight(v) ? " is-highlighted" : "");
-               <li className> {renderSuggestion(v)} </li>;
+               <li
+                 className
+                 onMouseOver=(_ => onHoverSuggestion(v))
+                 onMouseOut=(_ => onClearSuggestions())>
+                 {renderSuggestion(v)}
+               </li>;
              });
 
         <ul> ...suggs </ul>;
