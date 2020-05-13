@@ -6,6 +6,7 @@ node_modules
 /lib/bs
 *.bs.js
 /dist
+/bundledOutputs
 .merlin
 .bsb.lock
 

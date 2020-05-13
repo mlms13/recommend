@@ -16,7 +16,6 @@ let createMake = () => {
       | Closed(Inactive) => ReasonReact.null
       | Closed(InsufficientFilter) =>
         <div> {ReasonReact.string("Type more characters")} </div>
-
       | Open(Loading, _) => <div> {ReasonReact.string("Loading")} </div>
       | Open(Failed(_), _) => <div> {ReasonReact.string("Failed")} </div>
       | Open(NoResults, _) => <div> {ReasonReact.string("No results")} </div>

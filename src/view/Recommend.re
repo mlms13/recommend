@@ -34,14 +34,13 @@ let createMake = () => {
       let first = l => NonEmptyList.head(l);
       let rec selectNext = (lst, v) =>
         switch (lst) {
-        | []
-        | [_] => v
-        | [x, y, ...rest] =>
-          eqSuggestion(x, v) ? y : selectNext([y, ...rest], v)
+        | [x, y, ..._] when eqSuggestion(x, v) => y
+        | [_, ...xs] => selectNext(xs, v)
+        | _ => v
         };
 
-      let prev = (l, v) => selectNext(NonEmptyList.toT(rev(l)), v);
       let next = (l, v) => selectNext(NonEmptyList.toT(l), v);
+      let prev = (l, v) => selectNext(NonEmptyList.toT(rev(l)), v);
 
       switch (action, state.menuState) {
       /* Update filter and set menu to "insufficient" */
