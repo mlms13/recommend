@@ -34,7 +34,7 @@
     "reason-future": "^2.3.1",
     "reason-react": "^0.5.3",
     "webpack": "4.19",
-    "webpack-cli": "^2.0"
+    "webpack-cli": "^5.0"
   },
   "devDependencies": {
     "bs-decode": "0.3.1",
